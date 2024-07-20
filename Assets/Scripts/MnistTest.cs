@@ -1,13 +1,17 @@
+using System;
 using System.Linq;
+using TMPro;
 using Unity.Barracuda;
 using UnityEngine;
 
 public class MnistTest : MonoBehaviour
 {
+    [SerializeField] private TextMeshProUGUI result; //识别结果
     public NNModel model; // 存储神经网络模型的对象
     public Texture2D image; // 存储待测试图像的纹理对象
-    public PredictionPlot predictionPlot; // 预测结果可视化的组件
+    //public PredictionPlot predictionPlot; // 预测结果可视化的组件
     public PreviewManager previewManager; // 预览管理器，用于获取预览的缩放纹理
+    
 
     private Model runtimeModel; // 运行时加载的神经网络模型
     private IWorker engine; // 神经网络推理引擎
@@ -35,6 +39,8 @@ public class MnistTest : MonoBehaviour
             result += predict + ",";
         }
         Debug.Log(result);
+
+        image = previewManager.ScaledTexture;
     }
 
     // 在绘制纹理时调用，用于进行推理
@@ -55,8 +61,13 @@ public class MnistTest : MonoBehaviour
         Tensor output = engine.Execute(input).PeekOutput(); // 执行推理并获取输出张量
         input.Dispose(); // 释放输入张量内存
         predicted = output.AsFloats().SoftMax().ToArray(); // 将输出张量转换为浮点数组，并进行 softmax 归一化
-        output.Dispose(); // 释放输出张量内存
-        predictionPlot.UpdatePlot(predicted); // 更新预测结果的可视化
+        for (int i = 0; i < predicted.Length; i++)
+        {
+            Debug.Log($"{i}:  {predicted[i].ToString("0.##########")}");
+        }
+        result.text = Array.IndexOf(predicted, predicted.Max()).ToString();
+        //output.Dispose(); // 释放输出张量内存
+        //predictionPlot.UpdatePlot(predicted); // 更新预测结果的可视化
         isProcessing = false; // 推理结束，设置标志为 false
     }
 
@@ -71,10 +82,18 @@ public class MnistTest : MonoBehaviour
         Tensor output = engine.Execute(input).PeekOutput(); // 执行推理并获取输出张量
         input.Dispose(); // 释放输入张量内存
         predicted = output.AsFloats().SoftMax().ToArray(); // 将输出张量转换为浮点数组，并进行 softmax 归一化
-        output.Dispose(); // 释放输出张量内存
-        predictionPlot.UpdatePlot(predicted); // 更新预测结果的可视化
+
+        for (int i = 0; i < predicted.Length; i++)
+        {
+            Debug.Log($"{i}:  {predicted[i].ToString("0.##########")}");
+        }
+        result.text = Array.IndexOf(predicted, predicted.Max()).ToString();
+
+        //output.Dispose(); // 释放输出张量内存
+        //predictionPlot.UpdatePlot(predicted); // 更新预测结果的可视化
         isProcessing = false; // 推理结束，设置标志为 false
     }
+
 
     // 当对象被销毁时调用，释放推理引擎的资源
     private void OnDestroy()

@@ -8,7 +8,8 @@ using UnityEngine.EventSystems;
 public class DrawManager : MonoBehaviour
 {
     // 用于绘制线条的预制体
-    [SerializeField] private Line linePrefab;
+    [SerializeField] private Line BlacklinePrefab;
+    [SerializeField] private Line WhitelinePrefab;
     // 审阅面板，当它处于激活状态时，禁止绘制
     [SerializeField] private GameObject UIPanel;
 
@@ -16,7 +17,8 @@ public class DrawManager : MonoBehaviour
     public UnityEvent OnFinishDrawing;
 
     // 当前正在绘制的线条
-    private Line currentLine;
+    private Line currentBlackLine;
+    private Line currentWhiteLine;
     // 主摄像机
     private Camera mainCam;
 
@@ -24,6 +26,7 @@ public class DrawManager : MonoBehaviour
     private void Start()
     {
         mainCam = Camera.main;
+
     }
 
     // 每帧更新
@@ -39,32 +42,51 @@ public class DrawManager : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             // 实例化新的线条预制体
-            currentLine = Instantiate(linePrefab, Vector3.zero, Quaternion.identity, transform);
+            currentBlackLine = Instantiate(BlacklinePrefab, Vector3.zero, Quaternion.identity, transform);
+            currentWhiteLine = Instantiate(WhitelinePrefab, Vector3.zero, Quaternion.identity, transform);
             // 添加鼠标当前位置作为线条的第一个点
-            currentLine.AddPosition(mousePos);
+            currentBlackLine.AddPosition(mousePos);
+            currentWhiteLine.AddPosition(mousePos);
         }
 
         // 如果按住鼠标左键，继续绘制线条
         if (Input.GetMouseButton(0))
         {
             // 如果没有当前线条，返回
-            if (!currentLine) return;
+            if (!currentBlackLine || !currentWhiteLine) return;
 
             // 如果可以在当前位置继续添加点
-            if (currentLine.CanAppend(mousePos))
+            if (currentBlackLine.CanAppend(mousePos))
             {
                 // 添加鼠标当前位置作为线条的下一个点
-                currentLine.AddPosition(mousePos);
+                currentBlackLine.AddPosition(mousePos);
             }
             // 如果形成锐角，结束当前线条并开始新线条
-            else if (currentLine.IsAcuteAngle(mousePos))
+            else if (currentBlackLine.IsAcuteAngle(mousePos))
             {
                 // 获取当前线条的最后一个点的位置
-                Vector2 lastPos = currentLine.LastPos;
+                Vector2 lastPos = currentBlackLine.LastPos;
                 // 实例化新的线条预制体
-                currentLine = Instantiate(linePrefab, Vector3.zero, Quaternion.identity, transform);
+                currentBlackLine = Instantiate(BlacklinePrefab, Vector3.zero, Quaternion.identity, transform);
                 // 添加上一个线条的最后一个点作为新线条的第一个点
-                currentLine.AddPosition(lastPos);
+                currentBlackLine.AddPosition(lastPos);
+            }
+
+            // 如果可以在当前位置继续添加点
+            if (currentWhiteLine.CanAppend(mousePos))
+            {
+                // 添加鼠标当前位置作为线条的下一个点
+                currentWhiteLine.AddPosition(mousePos);
+            }
+            // 如果形成锐角，结束当前线条并开始新线条
+            else if (currentWhiteLine.IsAcuteAngle(mousePos))
+            {
+                // 获取当前线条的最后一个点的位置
+                Vector2 lastPos = currentWhiteLine.LastPos;
+                // 实例化新的线条预制体
+                currentWhiteLine = Instantiate(WhitelinePrefab, Vector3.zero, Quaternion.identity, transform);
+                // 添加上一个线条的最后一个点作为新线条的第一个点
+                currentWhiteLine.AddPosition(lastPos);
             }
         }
 
